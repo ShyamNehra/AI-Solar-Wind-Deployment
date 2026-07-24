@@ -10,6 +10,7 @@ from app.api.predictions import router as predictions_router
 from routers.features import router as features_router
 from app.api.dashboard import router as dashboard_router
 from routers.solar import router as solar_router
+from app.api.analysis import router as analysis_router
 
 from fastapi.staticfiles import StaticFiles
 
@@ -34,6 +35,8 @@ app.include_router(predictions_router)
 app.include_router(features_router)
 app.include_router(dashboard_router)
 app.include_router(solar_router)
+app.include_router(analysis_router)
+
 
 
 @app.get("/health", tags=["System"])
