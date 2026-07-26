@@ -1,19 +1,20 @@
 from app.data_sources.nasa_power import NASAPowerClient
 
 class SolarService:
-    """Handles feature engineering and potential metrics for solar installations."""
+    """Orchestrates historical climate calculations using live satellite data entries."""
     
     def __init__(self, nasa_client: NASAPowerClient):
         self.nasa_client = nasa_client
 
     def calculate_solar_potential(self, latitude: float, longitude: float) -> dict:
-        """Processes raw climate data into actionable solar forecasting features."""
-        raw_solar = self.nasa_client.get_solar_metrics(latitude, longitude)
+        """Processes raw historical weather values into localized solar profiling metrics."""
+        # Task 3: Call live data client cleanly instead of using static indicators
+        live_metrics = self.nasa_client.get_solar_metrics(latitude, longitude)
         
-        # Placeholders for upcoming Week 4 math modeling
+        # Merge calculated variables alongside contextual engineering recommendations
         return {
-            "estimated_annual_kwh_per_m2": 0.0,
-            "peak_sun_hours_average": 0.0,
-            "optimal_panel_tilt_degrees": latitude * 0.87,  # Rough geographic estimation rules
-            "risk_factors": ["Cloud cover anomalies (Pending Data Extraction)"]
+            "solar_irradiance": live_metrics["solar_irradiance"],
+            "temperature": live_metrics["temperature"],
+            "humidity": live_metrics["humidity"],
+            "optimal_panel_tilt_degrees": round(abs(latitude) * 0.87, 1)
         }
