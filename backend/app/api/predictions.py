@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
-# Imports from your evaluation & services modules
+# Existing Evaluation & Service imports
 from app.evaluation.scorer import SiteScorer, SiteMetrics, SiteEvaluationResult
 from app.services.energy_estimator import (
     EnergyEstimationService, 
@@ -10,13 +10,21 @@ from app.services.energy_estimator import (
     DeploymentType
 )
 
+# Pipeline Integration imports (Tasks 2 & 3)
+from app.services.analysis_pipeline import (
+    AnalysisPipeline, 
+    SiteAnalysisRequest, 
+    ConsolidatedAnalysisResponse
+)
+
 router = APIRouter(prefix="/predictions", tags=["Predictions & Evaluation"])
 
 # Initialize Services
 scorer = SiteScorer()
 estimator = EnergyEstimationService()
+pipeline = AnalysisPipeline()
 
-
+# Request/Response Schemas for Site Evaluation
 class FullSiteAssessmentRequest(BaseModel):
     site_metrics: SiteMetrics
     technology: DeploymentType
@@ -30,7 +38,7 @@ class FullSiteAssessmentResponse(BaseModel):
     evaluation: SiteEvaluationResult
     energy_yield: EnergyEstimationResult
 
-
+# Endpoints
 @router.post("/evaluate", response_model=FullSiteAssessmentResponse)
 def evaluate_and_estimate_site(payload: FullSiteAssessmentRequest):
     """
@@ -79,3 +87,24 @@ def rank_candidate_sites(sites: list[SiteMetrics]):
         "top_recommended_site": ranked_results[0].site_id,
         "rankings": ranked_results
     }
+
+
+@router.post("/analysis", response_model=ConsolidatedAnalysisResponse, status_code=status.HTTP_200_OK)
+def analyze_site(request: SiteAnalysisRequest):
+    """
+    Executes the complete unified workflow:
+    1. Retrieves Solar & Wind Resource Profiles
+    2. Evaluates site across 5 suitability categories
+    3. Calculates overall site score (0-100)
+    4. Computes estimated energy yields
+    5. Returns deployment strategy and expansion feasibility
+    """
+    try:
+        return pipeline.run(request)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Analysis pipeline execution failed: {str(e)}"
+        )
+
+    
