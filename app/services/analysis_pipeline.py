@@ -5,24 +5,35 @@ from services.feature_engineering.wind import WindFeatureEngineer
 from app.services.scoring_engine import evaluate_site_suitability
 from app.services.deployment_strategy import recommend_deployment
 from schemas.analysis import AnalysisRequest
+from app.services.prediction_service import PredictionService
+from app.services.feasibility_engine import TechnicalFeasibilityEngine
+from app.services.energy_yield_service import EnergyYieldService
 
 class AnalysisPipelineService:
     """
-    Service responsible for executing the complete site analysis workflow.
+    Service responsible for executing the complete site analysis workflow:
+    Retrieving features, scoring the site, predicting with ML, checking feasibility, and estimating yields.
     """
 
     def __init__(
         self,
         nasa_client: NASAPowerClient | None = None,
-        wind_client: GlobalWindAtlasClient | None = None
+        wind_client: GlobalWindAtlasClient | None = None,
+        prediction_service: PredictionService | None = None,
+        feasibility_engine: TechnicalFeasibilityEngine | None = None,
+        energy_yield_service: EnergyYieldService | None = None
     ):
         """
-        Initialize the AnalysisPipelineService with injected or default clients.
+        Initialize the AnalysisPipelineService with injected or default clients/services.
         """
         self._nasa_client = nasa_client or NASAPowerClient()
         self._wind_client = wind_client or GlobalWindAtlasClient()
         self._solar_engineer = SolarFeatureEngineer(nasa_client=self._nasa_client)
         self._wind_engineer = WindFeatureEngineer(wind_client=self._wind_client)
+        
+        self._prediction_service = prediction_service or PredictionService()
+        self._feasibility_engine = feasibility_engine or TechnicalFeasibilityEngine()
+        self._energy_yield_service = energy_yield_service or EnergyYieldService()
 
     def run_analysis(self, request: AnalysisRequest) -> dict:
         """
@@ -32,7 +43,10 @@ class AnalysisPipelineService:
         3. Retrieve wind features using the existing Wind Feature Module (with fallback)
         4. Evaluate the site using the existing Site Scoring Engine
         5. Generate the deployment recommendation using the existing Deployment Recommendation Module
-        6. Return one consolidated analysis object
+        6. Predict the site metrics using the ML models (Inference)
+        7. Evaluate hard and soft constraints using the Technical Feasibility Engine
+        8. Estimate energy yields using the Energy Yield Service
+        9. Return consolidated analysis response
         """
         latitude = request.latitude
         longitude = request.longitude
@@ -74,7 +88,53 @@ class AnalysisPipelineService:
             wind_speed=wind_data["wind_speed"]
         )
 
-        # 7. Return consolidated analysis dictionary
+        # 7. Predict site suitability score and technology deployment using ML
+        predicted_score = None
+        predicted_rec = None
+        top_features = None
+        explanation = None
+
+        if self._prediction_service.models_loaded:
+            predicted_score = self._prediction_service.predict_suitability_score(site_data)
+            predicted_rec = self._prediction_service.predict_deployment_recommendation(site_data)
+            top_features = self._prediction_service.get_feature_importance_regressor()
+            explanation = f"Prediction is primarily influenced by {top_features[0]['feature']} and {top_features[1]['feature']}."
+
+        # 8. Evaluate Technical Feasibility Constraints
+        feasibility_res = self._feasibility_engine.evaluate_site(site_data)
+
+        # 9. Estimate Energy Yields
+        solar_yield = self._energy_yield_service.estimate_solar_energy_yield(
+            solar_irradiance=solar_data["solar_irradiance"],
+            installed_capacity_kw=request.installed_capacity_kw,
+            system_efficiency=request.solar_system_efficiency,
+            solar_capacity_factor=request.solar_capacity_factor
+        )
+
+        wind_yield = self._energy_yield_service.estimate_wind_energy_yield(
+            wind_speed=wind_data["wind_speed"],
+            installed_capacity_kw=request.installed_capacity_kw,
+            wind_capacity_factor=request.wind_capacity_factor,
+            losses=request.wind_operational_losses
+        )
+
+        hybrid_yield = self._energy_yield_service.estimate_hybrid_energy_yield(
+            solar_yield=solar_yield,
+            wind_yield=wind_yield
+        )
+
+        # Determine annual energy yield for the recommended technology
+        rec_tech = recommendation_result["deployment"]
+        if rec_tech == "Solar":
+            recommended_yield = solar_yield
+        elif rec_tech == "Wind":
+            recommended_yield = wind_yield
+        elif rec_tech == "Hybrid":
+            recommended_yield = hybrid_yield
+        else:
+            recommended_yield = 0.0
+
+        # 10. Return consolidated analysis dictionary
         return {
             "project": {
                 "project_name": request.project_name,
@@ -102,5 +162,24 @@ class AnalysisPipelineService:
             "site_score": {
                 "overall_score": suitability_result["overall_score"]
             },
-            "deployment_recommendation": recommendation_result
+            "deployment_recommendation": recommendation_result,
+
+            # ML Predictions
+            "predicted_overall_score": predicted_score,
+            "predicted_deployment": predicted_rec,
+            "top_features": top_features,
+            "explanation": explanation,
+
+            # Feasibility Result
+            "technical_feasibility": feasibility_res["technical_feasibility"],
+            "technical_feasibility_score": feasibility_res["technical_feasibility_score"],
+            "constraint_violations": feasibility_res["constraint_violations"],
+            "critical_violations": feasibility_res["critical_violations"],
+            "overall_status": feasibility_res["overall_status"],
+
+            # Energy Yield Estimation
+            "solar_energy_yield_kwh": solar_yield,
+            "wind_energy_yield_kwh": wind_yield,
+            "hybrid_energy_yield_kwh": hybrid_yield,
+            "recommended_annual_energy_kwh": recommended_yield
         }
