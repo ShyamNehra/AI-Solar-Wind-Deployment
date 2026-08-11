@@ -1,0 +1,14 @@
+# docker/docker-compose.yml
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: site_intelligence_backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../backend/.env
+    restart: always
