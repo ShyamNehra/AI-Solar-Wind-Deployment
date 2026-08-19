@@ -42,25 +42,25 @@ class DeploymentPlan(BaseModel):
 
 class DeploymentOptimizer:
     def __init__(self):
-        # Land density rules (Engineering Constants)
-        # Solar PV: ~20,000 sq.m (2 hectares) per 1 MW
-        self.SOLAR_SQM_PER_MW = 20000.0
+        # Land density rules based on domain benchmarks:
+        # Solar PV: ~4.5 flat acres per MW = ~18,210 sq.m per MW
+        self.SOLAR_SQM_PER_MW = 18210.0
         
-        # Wind Turbines: ~100,000 sq.m (10 hectares) per 1 MW (accounting for spacing/wake effect)
-        self.WIND_SQM_PER_MW = 100000.0
+        # Wind Turbines: ~40 acres per MW = ~161,874 sq.m per MW (accounting for spacing/wake effect)
+        self.WIND_SQM_PER_MW = 161874.0
 
     # -----------------------------------------------------------------------
     # Task 1: Strategy Selection
     # -----------------------------------------------------------------------
     def select_strategy(self, solar_irradiance: float, wind_speed: float) -> TechnologyType:
-        has_good_solar = solar_irradiance >= 4.5
-        has_good_wind = wind_speed >= 5.5
-
-        if has_good_solar and has_good_wind:
+        from app.services.deployment_strategy import recommend_deployment
+        rec = recommend_deployment(solar_irradiance, wind_speed)
+        dep = rec["deployment"].upper()
+        if dep == "HYBRID":
             return TechnologyType.HYBRID
-        elif has_good_solar:
+        elif dep == "SOLAR":
             return TechnologyType.SOLAR
-        elif has_good_wind:
+        elif dep == "WIND":
             return TechnologyType.WIND
         else:
             return TechnologyType.UNSUITABLE

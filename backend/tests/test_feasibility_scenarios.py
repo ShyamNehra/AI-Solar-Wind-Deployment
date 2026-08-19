@@ -21,7 +21,7 @@ def test_scenario_1_hard_constraint_rejection():
     assert result["final_status"] == "REJECTED"
     assert result["feasibility_score"] == 0.0
     assert len(result["constraint_summary"]["hard_constraint_violations"]) == 2
-    print("\n✔ Scenario 1 Passed: Hard constraint violation triggered REJECTED status.")
+    print("\n[OK] Scenario 1 Passed: Hard constraint violation triggered REJECTED status.")
 
 
 def test_scenario_2_soft_constraint_variations():
@@ -54,8 +54,27 @@ def test_scenario_2_soft_constraint_variations():
     assert prime_res["feasibility_score"] > remote_res["feasibility_score"]
     assert prime_res["final_status"] == "APPROVED"
     assert remote_res["final_status"] == "CONDITIONAL"
-    print(f"\n✔ Scenario 2 Passed: Prime site scored {prime_res['feasibility_score']}, Remote site scored {remote_res['feasibility_score']}.")
+    print(f"\n[OK] Scenario 2 Passed: Prime site scored {prime_res['feasibility_score']}, Remote site scored {remote_res['feasibility_score']}.")
+
+def test_ocean_region_rejection():
+    """Verify that offshore marine/ocean coordinates are automatically detected as water bodies and rejected."""
+    engine = FeasibilityEngine()
+
+    ocean_sites = [
+        {"name": "Southern Ocean (South of Kanyakumari)", "latitude": 7.4060, "longitude": 77.1832, "solar_irradiance": 5.16, "wind_speed": 3.6, "slope": 2.8},
+        {"name": "Arabian Sea (Offshore Kerala)", "latitude": 8.3202, "longitude": 75.9007, "solar_irradiance": 5.15, "wind_speed": 3.58, "slope": 2.2}
+    ]
+
+    for site in ocean_sites:
+        res = engine.run_assessment(site, deployment_type="solar")
+        assert res["is_technically_feasible"] is False, f"Failed: Ocean site {site['name']} was not marked as unfeasible!"
+        assert res["final_status"] == "REJECTED", f"Failed: Ocean site {site['name']} status was not REJECTED!"
+        assert res["feasibility_score"] == 0.0, f"Failed: Ocean site {site['name']} score was not 0.0!"
+        assert res["land_type"] == "water_body", f"Failed: Ocean site {site['name']} land_type was not water_body!"
+        print(f"\n[OK] Ocean Check Passed: {site['name']} properly REJECTED as {res['land_type']}.")
+
 
 if __name__ == "__main__":
     test_scenario_1_hard_constraint_rejection()
     test_scenario_2_soft_constraint_variations()
+    test_ocean_region_rejection()

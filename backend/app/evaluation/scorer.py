@@ -80,17 +80,17 @@ def normalize_distance(distance_km: float, max_acceptable_km: float = 50.0) -> f
 class SiteScorer:
     def __init__(self, category_weights: Optional[Dict[str, float]] = None):
         """
-        Task 3 Default Weights (must sum to 1.0):
-        - Resource: 35%
-        - Infrastructure: 25%
-        - Terrain: 15%
-        - Environmental: 15%
-        - Economic: 10%
+        Module 10 Scoring Model Weights (must sum to 1.0):
+        - Resource Availability: 35%
+        - Geographic Suitability: 25%
+        - Infrastructure Accessibility: 15%
+        - Environmental Impact: 15%
+        - Economic Feasibility: 10%
         """
         self.weights = category_weights or {
             "resource": 0.35,
-            "infrastructure": 0.25,
-            "terrain": 0.15,
+            "terrain": 0.25,
+            "infrastructure": 0.15,
             "environmental": 0.15,
             "economic": 0.10
         }

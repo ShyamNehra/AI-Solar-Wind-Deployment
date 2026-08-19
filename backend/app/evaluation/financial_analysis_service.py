@@ -7,11 +7,11 @@ class FinancialAnalysisService:
     annual revenue, simple payback period, and ROI for renewable installations.
     """
 
-    # Industry benchmarks (INR Defaults)
-    DEFAULT_TARIFF_INR_PER_KWH = 4.50     # ₹4.50 per kWh tariff benchmark
-    DEFAULT_SOLAR_COST_PER_MW = 45000000.0  # ₹4.5 Crore per MW for Solar PV
-    DEFAULT_WIND_COST_PER_MW = 65000000.0   # ₹6.5 Crore per MW for Onshore Wind
-    DEFAULT_INSTALLATION_ADDON_PCT = 0.10   # 10% additional balance-of-plant/EPC cost
+    # Industry benchmarks based on domain parameters (INR Defaults)
+    DEFAULT_TARIFF_INR_PER_KWH = 4.50         # ₹4.50 per kWh tariff benchmark
+    DEFAULT_SOLAR_COST_PER_MW = 42500000.0     # ₹4.25 Crore per MW for Solar PV (range ₹3.5–5.0 Cr/MW)
+    DEFAULT_WIND_COST_PER_MW = 80000000.0      # ₹8.0 Crore per MW for Onshore Wind (range ₹6.0–10.0 Cr/MW)
+    DEFAULT_INSTALLATION_ADDON_PCT = 0.10       # 10% additional balance-of-plant/EPC cost
 
     def estimate_project_cost(
         self, 
@@ -21,20 +21,25 @@ class FinancialAnalysisService:
     ) -> float:
         """
         Calculates total project CAPEX installation cost in INR (₹).
+        Benchmark:
+          - Solar: ₹3.5 - ₹5.0 Crore / MW (Default: ₹4.25 Cr)
+          - Wind:  ₹6.0 - ₹10.0 Crore / MW (Default: ₹8.00 Cr)
         Allows overriding cost per MW or adding custom installation percentage.
         """
         dtype = deployment_type.lower()
         
-        # Base cost per MW selection based on technology
+        # Base cost selection based on technology
         if "custom_cost_per_mw" in env_features:
-            base_cost_per_mw = float(env_features["custom_cost_per_mw"])
+            base_cost = installed_capacity_mw * float(env_features["custom_cost_per_mw"])
+        elif "hybrid" in dtype:
+            solar_mw = float(env_features.get("solar_capacity_mw", installed_capacity_mw * 0.6))
+            wind_mw = float(env_features.get("wind_capacity_mw", installed_capacity_mw * 0.4))
+            base_cost = (solar_mw * self.DEFAULT_SOLAR_COST_PER_MW) + (wind_mw * self.DEFAULT_WIND_COST_PER_MW)
         elif "wind" in dtype:
-            base_cost_per_mw = self.DEFAULT_WIND_COST_PER_MW
+            base_cost = installed_capacity_mw * self.DEFAULT_WIND_COST_PER_MW
         else:
-            base_cost_per_mw = self.DEFAULT_SOLAR_COST_PER_MW
+            base_cost = installed_capacity_mw * self.DEFAULT_SOLAR_COST_PER_MW
 
-        base_cost = installed_capacity_mw * base_cost_per_mw
-        
         # Additional installation / balance of plant percentage
         addon_pct = float(env_features.get("installation_addon_pct", self.DEFAULT_INSTALLATION_ADDON_PCT))
         total_project_cost = base_cost * (1.0 + addon_pct)
