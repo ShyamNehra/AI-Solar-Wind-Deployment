@@ -127,3 +127,12 @@ def health_check():
 # 10. Direct Execution Entry Point
 if __name__ == "__main__":
     uvicorn.run("app.main:app", host=HOST, port=PORT, reload=True)
+
+@app.api_route("/health", methods=["GET", "HEAD"], tags=["Health"])
+@app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
+def health_check():
+    return {
+        "status": "HEALTHY",
+        "service": "AI Solar & Wind Intelligence Engine",
+        "version": "1.0.0"
+    }
