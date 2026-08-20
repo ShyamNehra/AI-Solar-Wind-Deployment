@@ -2,6 +2,7 @@ import os
 import sys
 import logging
 import subprocess
+import asyncio
 from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI, Request, status
@@ -58,8 +59,8 @@ def run_db_initialization_and_seed():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Runs automatically on application startup
-    run_db_initialization_and_seed()
+    # Run seeding in background to allow immediate port binding
+    asyncio.create_task(asyncio.to_thread(run_db_initialization_and_seed))
     yield
     # Cleanup logic (if any) runs on shutdown
 
@@ -69,9 +70,9 @@ HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", 8000))
 raw_origins = os.getenv(
     "ALLOWED_ORIGINS",
-    "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000,*"
+    "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000"
 )
-ALLOWED_ORIGINS = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+ALLOWED_ORIGINS = [origin.strip() for origin in raw_origins.split(",") if origin.strip() and origin.strip() != "*"]
 
 # 4. Initialize FastAPI Application
 app = FastAPI(
@@ -81,10 +82,11 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# 5. Configure Permissive CORS Middleware (Must run before other middlewares for OPTIONS preflight)
+# 5. Configure Spec-Compliant CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if "*" in ALLOWED_ORIGINS else ALLOWED_ORIGINS,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"^https?:\/\/.*",  # Permissive origin matching compatible with credentials
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -95,7 +97,17 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SecurityHeadersMiddleware)
 
-# 7. Register API Routers
+# 7. Container & Health Check Endpoints (Supports both GET and HEAD for Render probes)
+@app.api_route("/health", methods=["GET", "HEAD"], tags=["Health"])
+@app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
+def health_check():
+    return {
+        "status": "HEALTHY",
+        "service": "AI Solar & Wind Intelligence Engine",
+        "version": "1.0.0"
+    }
+
+# 8. Register API Routers
 app.include_router(home_router, tags=["Home"])
 app.include_router(predictions_router, prefix="/predictions", tags=["Predictions"])
 app.include_router(projects_router, prefix="/projects", tags=["Projects"])
@@ -104,7 +116,7 @@ app.include_router(saved_sites_router, prefix="/sites", tags=["Saved Sites"])
 app.include_router(auth_router)
 
 
-# 8. Global Exception Handler to sanitize 500 errors
+# 9. Global Exception Handler to sanitize 500 errors
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled error processing request {request.method} {request.url.path}: {exc}", exc_info=True)
@@ -114,25 +126,6 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-# 9. Container & Health Check Endpoint
-@app.get("/health", tags=["Health"])
-def health_check():
-    return {
-        "status": "HEALTHY",
-        "service": "AI Solar & Wind Intelligence Engine",
-        "version": "1.0.0"
-    }
-
-
 # 10. Direct Execution Entry Point
 if __name__ == "__main__":
     uvicorn.run("app.main:app", host=HOST, port=PORT, reload=True)
-
-@app.api_route("/health", methods=["GET", "HEAD"], tags=["Health"])
-@app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
-def health_check():
-    return {
-        "status": "HEALTHY",
-        "service": "AI Solar & Wind Intelligence Engine",
-        "version": "1.0.0"
-    }
