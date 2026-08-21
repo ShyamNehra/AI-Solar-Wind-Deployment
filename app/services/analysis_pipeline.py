@@ -8,11 +8,12 @@ from schemas.analysis import AnalysisRequest
 from app.services.prediction_service import PredictionService
 from app.services.feasibility_engine import TechnicalFeasibilityEngine
 from app.services.energy_yield_service import EnergyYieldService
+from app.services.financial_analysis_service import FinancialAnalysisService
 
 class AnalysisPipelineService:
     """
     Service responsible for executing the complete site analysis workflow:
-    Retrieving features, scoring the site, predicting with ML, checking feasibility, and estimating yields.
+    Retrieving features, scoring the site, predicting with ML, checking feasibility, estimating yields, and evaluating financials.
     """
 
     def __init__(
@@ -21,7 +22,8 @@ class AnalysisPipelineService:
         wind_client: GlobalWindAtlasClient | None = None,
         prediction_service: PredictionService | None = None,
         feasibility_engine: TechnicalFeasibilityEngine | None = None,
-        energy_yield_service: EnergyYieldService | None = None
+        energy_yield_service: EnergyYieldService | None = None,
+        financial_analysis_service: FinancialAnalysisService | None = None
     ):
         """
         Initialize the AnalysisPipelineService with injected or default clients/services.
@@ -34,6 +36,7 @@ class AnalysisPipelineService:
         self._prediction_service = prediction_service or PredictionService()
         self._feasibility_engine = feasibility_engine or TechnicalFeasibilityEngine()
         self._energy_yield_service = energy_yield_service or EnergyYieldService()
+        self._financial_analysis_service = financial_analysis_service or FinancialAnalysisService()
 
     def run_analysis(self, request: AnalysisRequest) -> dict:
         """
@@ -46,7 +49,8 @@ class AnalysisPipelineService:
         6. Predict the site metrics using the ML models (Inference)
         7. Evaluate hard and soft constraints using the Technical Feasibility Engine
         8. Estimate energy yields using the Energy Yield Service
-        9. Return consolidated analysis response
+        9. Perform financial evaluations using the Financial Analysis Service
+        10. Return consolidated analysis response
         """
         latitude = request.latitude
         longitude = request.longitude
@@ -134,7 +138,29 @@ class AnalysisPipelineService:
         else:
             recommended_yield = 0.0
 
-        # 10. Return consolidated analysis dictionary
+        # 10. Perform Financial Analysis
+        annual_revenue = self._financial_analysis_service.estimate_annual_revenue(
+            annual_energy_yield_kwh=recommended_yield,
+            electricity_tariff_inr_per_kwh=request.electricity_tariff_inr_per_kwh
+        )
+
+        project_cost = self._financial_analysis_service.estimate_project_cost(
+            installed_capacity_kw=request.installed_capacity_kw,
+            cost_per_kw=request.cost_per_kw,
+            additional_installation_percentage=request.additional_installation_percentage
+        )
+
+        payback = self._financial_analysis_service.calculate_payback_period(
+            total_project_cost=project_cost,
+            annual_revenue=annual_revenue
+        )
+
+        roi = self._financial_analysis_service.calculate_roi(
+            annual_revenue=annual_revenue,
+            total_project_cost=project_cost
+        )
+
+        # 11. Return consolidated analysis dictionary
         return {
             "project": {
                 "project_name": request.project_name,
@@ -181,5 +207,11 @@ class AnalysisPipelineService:
             "solar_energy_yield_kwh": solar_yield,
             "wind_energy_yield_kwh": wind_yield,
             "hybrid_energy_yield_kwh": hybrid_yield,
-            "recommended_annual_energy_kwh": recommended_yield
+            "recommended_annual_energy_kwh": recommended_yield,
+
+            # Financial Analysis
+            "annual_revenue": annual_revenue,
+            "estimated_project_cost": project_cost,
+            "payback_period": payback,
+            "roi": roi
         }

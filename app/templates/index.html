@@ -36,6 +36,11 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Central API Client -->
+    <script src="/static/js/analysis.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -91,6 +96,10 @@
                 <button onclick="switchTab('dashboard')" id="btn-dashboard" class="sidebar-btn flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold text-brandPrimary bg-brandPrimary/10 border border-brandPrimary/20 transition-all duration-200">
                     <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
                     <span class="label">Dashboard</span>
+                </button>
+                <button onclick="switchTab('analysis')" id="btn-analysis" class="sidebar-btn flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-textGray hover:text-brandPrimary hover:bg-white hover:shadow-sm transition-all duration-200">
+                    <i data-lucide="calculator" class="w-5 h-5"></i>
+                    <span class="label">Site Analysis</span>
                 </button>
                 <button onclick="switchTab('projects-sites')" id="btn-projects-sites" class="sidebar-btn flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-textGray hover:text-brandPrimary hover:bg-white hover:shadow-sm transition-all duration-200">
                     <i data-lucide="database" class="w-5 h-5"></i>
@@ -622,11 +631,327 @@
                     </div>
                 </div>
             </div>
+
+            <!-- TAB 5: SITE ANALYSIS -->
+            <div id="tab-analysis" class="tab-content hidden flex flex-col gap-8">
+                <!-- Banner Title -->
+                <div class="flex flex-col gap-2">
+                    <h2 class="text-3xl font-extrabold text-textDark tracking-tight">Site Analysis Engine</h2>
+                    <p class="text-sm text-textMuted">Coordinate-based spatial suitability engine combining NASA climate resources, ML recommendations, and project financial modeling.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Left Column: Inputs & Map -->
+                    <div class="lg:col-span-1 flex flex-col gap-6">
+                        <!-- Inputs Card -->
+                        <div class="bg-white border border-borderClr p-6 rounded-3xl flex flex-col gap-5 shadow-sm">
+                            <h3 class="text-base font-bold text-textDark flex items-center gap-2">
+                                <i data-lucide="map-pin" class="w-4 h-4 text-brandPrimary"></i>
+                                <span>Target Site Coordinates</span>
+                            </h3>
+
+                            <form id="analysis-form" onsubmit="executeAnalysis(event)" class="flex flex-col gap-4">
+                                <div class="flex flex-col gap-1">
+                                    <label class="text-xs font-semibold text-textGray">Latitude</label>
+                                    <input type="number" step="any" id="analysis-latitude" placeholder="e.g. 19.8135" value="19.8135" required class="bg-panelBg border border-borderClr rounded-xl px-3 py-2.5 text-sm text-textDark focus:outline-none focus:border-brandPrimary transition-all">
+                                </div>
+                                <div class="flex flex-col gap-1">
+                                    <label class="text-xs font-semibold text-textGray">Longitude</label>
+                                    <input type="number" step="any" id="analysis-longitude" placeholder="e.g. 85.8312" value="85.8312" required class="bg-panelBg border border-borderClr rounded-xl px-3 py-2.5 text-sm text-textDark focus:outline-none focus:border-brandPrimary transition-all">
+                                </div>
+
+                                <!-- Collapsible Advanced Settings -->
+                                <details class="group border-t border-borderClr/60 pt-3">
+                                    <summary class="flex items-center justify-between text-xs font-bold text-textGray cursor-pointer hover:text-brandPrimary select-none">
+                                        <span>Advanced Engineering & Financials</span>
+                                        <i data-lucide="chevron-down" class="w-4 h-4 text-textMuted group-open:rotate-180 transition-transform"></i>
+                                    </summary>
+                                    <div class="flex flex-col gap-3 mt-3">
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div class="flex flex-col gap-0.5">
+                                                <label class="text-[10px] font-semibold text-textMuted">Installed Cap (kW)</label>
+                                                <input type="number" step="any" id="analysis-capacity" value="1000" class="bg-panelBg border border-borderClr rounded-lg px-2 py-1 text-xs text-textDark">
+                                            </div>
+                                            <div class="flex flex-col gap-0.5">
+                                                <label class="text-[10px] font-semibold text-textMuted">Tariff (INR/kWh)</label>
+                                                <input type="number" step="any" id="analysis-tariff" value="7.0" class="bg-panelBg border border-borderClr rounded-lg px-2 py-1 text-xs text-textDark">
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div class="flex flex-col gap-0.5">
+                                                <label class="text-[10px] font-semibold text-textMuted">Cost per kW (INR)</label>
+                                                <input type="number" step="any" id="analysis-cost" value="25000" class="bg-panelBg border border-borderClr rounded-lg px-2 py-1 text-xs text-textDark">
+                                            </div>
+                                            <div class="flex flex-col gap-0.5">
+                                                <label class="text-[10px] font-semibold text-textMuted">Add. Cost (%)</label>
+                                                <input type="number" step="any" id="analysis-add-cost" value="10.0" class="bg-panelBg border border-borderClr rounded-lg px-2 py-1 text-xs text-textDark">
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div class="flex flex-col gap-0.5">
+                                                <label class="text-[10px] font-semibold text-textMuted">Solar Efficiency (%)</label>
+                                                <input type="number" step="any" min="0" max="100" id="analysis-solar-eff" value="80" class="bg-panelBg border border-borderClr rounded-lg px-2 py-1 text-xs text-textDark">
+                                            </div>
+                                            <div class="flex flex-col gap-0.5">
+                                                <label class="text-[10px] font-semibold text-textMuted">Wind Losses (%)</label>
+                                                <input type="number" step="any" min="0" max="100" id="analysis-wind-loss" value="15" class="bg-panelBg border border-borderClr rounded-lg px-2 py-1 text-xs text-textDark">
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div class="flex flex-col gap-0.5">
+                                                <label class="text-[10px] font-semibold text-textMuted">Elevation (m)</label>
+                                                <input type="number" step="any" id="analysis-elevation" value="10.0" class="bg-panelBg border border-borderClr rounded-lg px-2 py-1 text-xs text-textDark">
+                                            </div>
+                                            <div class="flex flex-col gap-0.5">
+                                                <label class="text-[10px] font-semibold text-textMuted">Slope (degrees)</label>
+                                                <input type="number" step="any" id="analysis-slope" value="2.0" class="bg-panelBg border border-borderClr rounded-lg px-2 py-1 text-xs text-textDark">
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div class="flex flex-col gap-0.5">
+                                                <label class="text-[10px] font-semibold text-textMuted">Dist to Road (km)</label>
+                                                <input type="number" step="any" id="analysis-road" value="1.5" class="bg-panelBg border border-borderClr rounded-lg px-2 py-1 text-xs text-textDark">
+                                            </div>
+                                            <div class="flex flex-col gap-0.5">
+                                                <label class="text-[10px] font-semibold text-textMuted">Dist to Grid (km)</label>
+                                                <input type="number" step="any" id="analysis-grid" value="3.5" class="bg-panelBg border border-borderClr rounded-lg px-2 py-1 text-xs text-textDark">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <button type="submit" id="btn-run-analysis" class="w-full mt-2 py-3 bg-brandPrimary hover:bg-brandHover disabled:bg-brandPrimary/50 text-white font-extrabold text-sm rounded-xl transition-all duration-200 shadow-md flex items-center justify-center gap-2">
+                                    <i data-lucide="play" class="w-4 h-4"></i>
+                                    <span id="btn-analysis-text">Analyse Site</span>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Map Card -->
+                        <div class="bg-white border border-borderClr p-4 rounded-3xl shadow-sm flex flex-col gap-3">
+                            <span class="text-xs font-bold text-textDark uppercase tracking-wider">Spatial Mapping Preview</span>
+                            <div id="analysis-map" class="h-64 w-full rounded-2xl border border-borderClr relative z-10 bg-slate-50"></div>
+                            <div class="text-[11px] text-textMuted flex items-center gap-1.5 justify-center">
+                                <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                                <span>Interactive geographic locator for selected candidates.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Results Dashboard -->
+                    <div class="lg:col-span-2 flex flex-col gap-6">
+                        <!-- 1. Placeholder State -->
+                        <div id="analysis-placeholder" class="bg-white border border-borderClr p-12 rounded-3xl shadow-sm flex flex-col items-center justify-center text-center gap-4 h-full min-h-[400px]">
+                            <div class="p-4 bg-brandPrimary/10 text-brandPrimary border border-brandPrimary/20 rounded-2xl">
+                                <i data-lucide="compass" class="w-10 h-10 animate-spin-slow"></i>
+                            </div>
+                            <h4 class="text-lg font-bold text-textDark">Awaiting Input Parameters</h4>
+                            <p class="text-sm text-textMuted max-w-sm">Provide valid latitude/longitude coordinates on the left panel to execute resource modeling.</p>
+                        </div>
+
+                        <!-- 2. Loading State -->
+                        <div id="analysis-loading" class="hidden bg-white border border-borderClr p-12 rounded-3xl shadow-sm flex flex-col items-center justify-center text-center gap-6 h-full min-h-[400px]">
+                            <div class="flex items-center justify-center gap-3">
+                                <span class="w-3.5 h-3.5 bg-brandPrimary rounded-full animate-bounce"></span>
+                                <span class="w-3.5 h-3.5 bg-brandPrimary rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                                <span class="w-3.5 h-3.5 bg-brandPrimary rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <h4 class="text-base font-bold text-textDark">Analysing site...</h4>
+                                <p class="text-xs text-textMuted max-w-xs">Fetching climate parameters, running regression classifiers, checking terrain parameters, and modeling payback estimations.</p>
+                            </div>
+                        </div>
+
+                        <!-- 3. Error State -->
+                        <div id="analysis-error" class="hidden p-6 bg-dangerRed/10 border border-dangerRed/20 rounded-3xl text-sm text-dangerRed font-medium flex flex-col gap-2 shadow-sm min-h-[120px]">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="alert-octagon" class="w-5 h-5 shrink-0"></i>
+                                <span class="font-bold text-dangerRed">Analysis Run Failed</span>
+                            </div>
+                            <p id="analysis-error-msg" class="text-xs text-textGray leading-relaxed"></p>
+                        </div>
+
+                        <!-- 4. Success State Results Dashboard -->
+                        <div id="analysis-results" class="hidden flex flex-col gap-6">
+                            
+                            <!-- KPI Header Summary -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="bg-white border border-borderClr p-5 rounded-2xl flex flex-col gap-1.5 shadow-sm">
+                                    <span class="text-[10px] font-bold text-textMuted uppercase tracking-wider">Site Designation</span>
+                                    <span id="res-location" class="text-base font-extrabold text-textDark truncate">-</span>
+                                    <span id="res-coords" class="text-xs text-textMuted font-medium">-</span>
+                                </div>
+                                <div class="bg-white border border-borderClr p-5 rounded-2xl flex flex-col gap-1.5 shadow-sm">
+                                    <span class="text-[10px] font-bold text-textMuted uppercase tracking-wider">Recommended Strategy</span>
+                                    <div class="flex items-center gap-2">
+                                        <span id="res-rec-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold text-white bg-brandPrimary">-</span>
+                                        <span id="res-confidence" class="text-xs text-textMuted font-semibold">-</span>
+                                    </div>
+                                    <span id="res-overall-status" class="text-xs text-accentGreen font-bold">-</span>
+                                </div>
+                                <div class="bg-white border border-borderClr p-5 rounded-2xl flex flex-col gap-1.5 shadow-sm">
+                                    <span class="text-[10px] font-bold text-textMuted uppercase tracking-wider">Financial Viability</span>
+                                    <span id="res-roi" class="text-base font-extrabold text-accentGreen">-</span>
+                                    <span id="res-payback" class="text-xs text-textMuted font-medium">-</span>
+                                </div>
+                            </div>
+
+                            <!-- Suitability Grid -->
+                            <div class="bg-white border border-borderClr p-6 rounded-3xl shadow-sm flex flex-col gap-4">
+                                <h3 class="text-xs font-bold text-textDark uppercase tracking-wider flex items-center gap-2">
+                                    <i data-lucide="sliders" class="w-4 h-4 text-brandPrimary"></i>
+                                    <span>Site Suitability Scores</span>
+                                </h3>
+                                <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
+                                    <div class="p-3 bg-panelBg rounded-xl border border-borderClr text-center flex flex-col gap-1">
+                                        <span class="text-[9px] font-bold text-textMuted uppercase">Overall</span>
+                                        <span id="res-score-overall" class="text-base font-extrabold text-brandPrimary">-</span>
+                                    </div>
+                                    <div class="p-3 bg-panelBg rounded-xl border border-borderClr text-center flex flex-col gap-1">
+                                        <span class="text-[9px] font-bold text-textMuted uppercase">Resource</span>
+                                        <span id="res-score-resource" class="text-base font-bold text-textDark">-</span>
+                                    </div>
+                                    <div class="p-3 bg-panelBg rounded-xl border border-borderClr text-center flex flex-col gap-1">
+                                        <span class="text-[9px] font-bold text-textMuted uppercase">Terrain</span>
+                                        <span id="res-score-terrain" class="text-base font-bold text-textDark">-</span>
+                                    </div>
+                                    <div class="p-3 bg-panelBg rounded-xl border border-borderClr text-center flex flex-col gap-1">
+                                        <span class="text-[9px] font-bold text-textMuted uppercase">Infras.</span>
+                                        <span id="res-score-infra" class="text-base font-bold text-textDark">-</span>
+                                    </div>
+                                    <div class="p-3 bg-panelBg rounded-xl border border-borderClr text-center flex flex-col gap-1">
+                                        <span class="text-[9px] font-bold text-textMuted uppercase">Environ.</span>
+                                        <span id="res-score-env" class="text-base font-bold text-textDark">-</span>
+                                    </div>
+                                    <div class="p-3 bg-panelBg rounded-xl border border-borderClr text-center flex flex-col gap-1">
+                                        <span class="text-[9px] font-bold text-textMuted uppercase">Economic</span>
+                                        <span id="res-score-economic" class="text-base font-bold text-textDark">-</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Feasibility & Recommendation -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="bg-white border border-borderClr p-6 rounded-3xl shadow-sm flex flex-col gap-4">
+                                    <h3 class="text-xs font-bold text-textDark uppercase tracking-wider flex items-center gap-2">
+                                        <i data-lucide="shield-check" class="w-4 h-4 text-accentGreen"></i>
+                                        <span>Technical Feasibility</span>
+                                    </h3>
+                                    <div class="flex flex-col gap-3">
+                                        <div class="flex justify-between border-b border-borderClr/60 pb-2.5 text-xs">
+                                            <span class="text-textGray">Feasibility Score</span>
+                                            <span id="res-feasibility-score" class="font-bold text-textDark">-</span>
+                                        </div>
+                                        <div class="flex justify-between border-b border-borderClr/60 pb-2.5 text-xs">
+                                            <span class="text-textGray">Constraint Violations</span>
+                                            <span id="res-feasibility-violations" class="font-bold text-textDark">-</span>
+                                        </div>
+                                        <div class="flex flex-col gap-1">
+                                            <span class="text-[10px] font-bold text-textMuted uppercase tracking-wider">Critical Constraint Violations</span>
+                                            <div id="res-critical-violations-list" class="text-xs font-medium text-dangerRed space-y-1">
+                                                <!-- List of violations -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-white border border-borderClr p-6 rounded-3xl shadow-sm flex flex-col gap-4">
+                                    <h3 class="text-xs font-bold text-textDark uppercase tracking-wider flex items-center gap-2">
+                                        <i data-lucide="brain" class="w-4 h-4 text-solarYellow"></i>
+                                        <span>Recommendation Details</span>
+                                    </h3>
+                                    <div class="flex flex-col gap-2.5 text-xs">
+                                        <div>
+                                            <span class="text-[10px] font-bold text-textMuted uppercase tracking-wider block">Decision Reason</span>
+                                            <p id="res-reason" class="text-textGray font-medium leading-relaxed mt-0.5">-</p>
+                                        </div>
+                                        <div class="border-t border-borderClr/60 pt-2">
+                                            <span class="text-[10px] font-bold text-textMuted uppercase tracking-wider block">ML Prediction Explainability</span>
+                                            <p id="res-ml-explanation" class="text-textGray font-medium leading-relaxed mt-0.5">-</p>
+                                        </div>
+                                        <div class="border-t border-borderClr/60 pt-2 flex flex-col gap-1">
+                                            <span class="text-[10px] font-bold text-textMuted uppercase tracking-wider">Top Influential Features</span>
+                                            <div id="res-top-features-list" class="grid grid-cols-3 gap-2 mt-1">
+                                                <!-- Top features -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Energy Yield Output -->
+                            <div class="bg-white border border-borderClr p-6 rounded-3xl shadow-sm flex flex-col gap-4">
+                                <h3 class="text-xs font-bold text-textDark uppercase tracking-wider flex items-center gap-2">
+                                    <i data-lucide="zap" class="w-4 h-4 text-solarYellow"></i>
+                                    <span>Estimated Energy Generation Yield</span>
+                                </h3>
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <div class="p-4 bg-panelBg border border-borderClr rounded-2xl text-center">
+                                        <span class="text-[10px] font-bold text-textMuted uppercase tracking-wider block">Solar Annual Yield</span>
+                                        <span id="res-solar-yield" class="text-base font-extrabold text-textDark block mt-1">-</span>
+                                        <span class="text-[9px] text-textMuted font-medium">kWh / year</span>
+                                    </div>
+                                    <div class="p-4 bg-panelBg border border-borderClr rounded-2xl text-center">
+                                        <span class="text-[10px] font-bold text-textMuted uppercase tracking-wider block">Wind Annual Yield</span>
+                                        <span id="res-wind-yield" class="text-base font-extrabold text-textDark block mt-1">-</span>
+                                        <span class="text-[9px] text-textMuted font-medium">kWh / year</span>
+                                    </div>
+                                    <div class="p-4 bg-panelBg border border-borderClr rounded-2xl text-center">
+                                        <span class="text-[10px] font-bold text-textMuted uppercase tracking-wider block">Hybrid Annual Yield</span>
+                                        <span id="res-hybrid-yield" class="text-base font-extrabold text-textDark block mt-1">-</span>
+                                        <span class="text-[9px] text-textMuted font-medium">kWh / year</span>
+                                    </div>
+                                    <div class="p-4 bg-brandPrimary/10 border border-brandPrimary/20 rounded-2xl text-center">
+                                        <span class="text-[10px] font-bold text-brandPrimary uppercase tracking-wider block">Recommended System Yield</span>
+                                        <span id="res-rec-yield" class="text-base font-extrabold text-brandPrimary block mt-1">-</span>
+                                        <span class="text-[9px] text-brandPrimary font-medium">kWh / year</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Financial Analysis -->
+                            <div class="bg-white border border-borderClr p-6 rounded-3xl shadow-sm flex flex-col gap-4">
+                                <h3 class="text-xs font-bold text-textDark uppercase tracking-wider flex items-center gap-2">
+                                    <i data-lucide="coins" class="w-4 h-4 text-accentGreen"></i>
+                                    <span>Financial Planning Projections</span>
+                                </h3>
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <div class="p-4 bg-panelBg border border-borderClr rounded-2xl text-center">
+                                        <span class="text-[10px] font-bold text-textMuted uppercase tracking-wider block">Est. Project Cost</span>
+                                        <span id="res-financial-cost" class="text-base font-extrabold text-textDark block mt-1">-</span>
+                                        <span class="text-[9px] text-textMuted font-medium">INR</span>
+                                    </div>
+                                    <div class="p-4 bg-panelBg border border-borderClr rounded-2xl text-center">
+                                        <span class="text-[10px] font-bold text-textMuted uppercase tracking-wider block">Estimated Annual Revenue</span>
+                                        <span id="res-financial-revenue" class="text-base font-extrabold text-textDark block mt-1">-</span>
+                                        <span class="text-[9px] text-textMuted font-medium">INR / year</span>
+                                    </div>
+                                    <div class="p-4 bg-panelBg border border-borderClr rounded-2xl text-center">
+                                        <span class="text-[10px] font-bold text-textMuted uppercase tracking-wider block">Simple Payback Period</span>
+                                        <span id="res-financial-payback" class="text-base font-extrabold text-textDark block mt-1">-</span>
+                                        <span class="text-[9px] text-textMuted font-medium">Years</span>
+                                    </div>
+                                    <div class="p-4 bg-accentGreen/10 border border-accentGreen/20 rounded-2xl text-center">
+                                        <span class="text-[10px] font-bold text-accentGreen uppercase tracking-wider block">Return on Investment</span>
+                                        <span id="res-financial-roi" class="text-base font-extrabold text-accentGreen block mt-1">-</span>
+                                        <span class="text-[9px] text-accentGreen font-medium">Annual ROI %</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
     <!-- Script Block -->
     <script>
+        // Global variables for analysis screen
+        let analysisMap = null;
+        let analysisMarker = null;
+
         // Tab switching
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => {
@@ -644,6 +969,205 @@
                 activeBtn.classList.remove('text-textGray', 'font-medium');
                 activeBtn.classList.add('bg-brandPrimary/10', 'border', 'border-brandPrimary/20', 'text-brandPrimary', 'font-semibold');
             }
+
+            // Invalidate Leaflet map size when analysis tab becomes visible to prevent rendering glitch
+            if (tabId === 'analysis' && analysisMap) {
+                setTimeout(() => {
+                    analysisMap.invalidateSize();
+                }, 100);
+            }
+        }
+
+        // Run coordinate-based spatial analysis
+        async function executeAnalysis(event) {
+            event.preventDefault();
+            
+            const latVal = document.getElementById('analysis-latitude').value.trim();
+            const lonVal = document.getElementById('analysis-longitude').value.trim();
+
+            const btn = document.getElementById('btn-run-analysis');
+            const btnText = document.getElementById('btn-analysis-text');
+            const placeholder = document.getElementById('analysis-placeholder');
+            const loading = document.getElementById('analysis-loading');
+            const results = document.getElementById('analysis-results');
+            const errorPanel = document.getElementById('analysis-error');
+            const errorMsg = document.getElementById('analysis-error-msg');
+
+            // Client-side quick checks
+            if (!latVal || isNaN(parseFloat(latVal))) {
+                showError("Please enter a valid numeric latitude.");
+                return;
+            }
+            if (!lonVal || isNaN(parseFloat(lonVal))) {
+                showError("Please enter a valid numeric longitude.");
+                return;
+            }
+            
+            const latitude = parseFloat(latVal);
+            const longitude = parseFloat(lonVal);
+
+            if (latitude < -90 || latitude > 90) {
+                showError("Please enter a valid latitude between -90 and 90.");
+                return;
+            }
+            if (longitude < -180 || longitude > 180) {
+                showError("Please enter a valid longitude between -180 and 180.");
+                return;
+            }
+
+            // Lock UI and show loader
+            btn.disabled = true;
+            btnText.innerText = "Analysing site...";
+            placeholder.classList.add('hidden');
+            loading.classList.remove('hidden');
+            results.classList.add('hidden');
+            errorPanel.classList.add('hidden');
+
+            const config = {
+                installed_capacity_kw: parseFloat(document.getElementById('analysis-capacity').value),
+                electricity_tariff_inr_per_kwh: parseFloat(document.getElementById('analysis-tariff').value),
+                cost_per_kw: parseFloat(document.getElementById('analysis-cost').value),
+                additional_installation_percentage: parseFloat(document.getElementById('analysis-add-cost').value),
+                solar_system_efficiency: parseFloat(document.getElementById('analysis-solar-eff').value) / 100.0,
+                wind_operational_losses: parseFloat(document.getElementById('analysis-wind-loss').value) / 100.0,
+                elevation: parseFloat(document.getElementById('analysis-elevation').value),
+                slope: parseFloat(document.getElementById('analysis-slope').value),
+                distance_to_road: parseFloat(document.getElementById('analysis-road').value),
+                distance_to_grid: parseFloat(document.getElementById('analysis-grid').value),
+                location: `Analysis: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
+            };
+
+            try {
+                const data = await analyzeSite(latitude, longitude, config);
+                populateResults(data, latitude, longitude);
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                btn.disabled = false;
+                btnText.innerText = "Analyse Site";
+                loading.classList.add('hidden');
+            }
+        }
+
+        function showError(msg) {
+            const placeholder = document.getElementById('analysis-placeholder');
+            const loading = document.getElementById('analysis-loading');
+            const results = document.getElementById('analysis-results');
+            const errorPanel = document.getElementById('analysis-error');
+            const errorMsg = document.getElementById('analysis-error-msg');
+
+            placeholder.classList.add('hidden');
+            loading.classList.add('hidden');
+            results.classList.add('hidden');
+            errorPanel.classList.remove('hidden');
+            
+            errorMsg.innerText = msg;
+        }
+
+        function populateResults(data, lat, lon) {
+            const results = document.getElementById('analysis-results');
+            const errorPanel = document.getElementById('analysis-error');
+            
+            errorPanel.classList.add('hidden');
+            results.classList.remove('hidden');
+
+            // 1. Header Summaries
+            document.getElementById('res-location').innerText = data.project.location;
+            document.getElementById('res-coords').innerText = `Coordinates: ${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+            
+            const badge = document.getElementById('res-rec-badge');
+            badge.innerText = data.deployment_recommendation.deployment;
+            // Color mapping
+            badge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold text-white";
+            if (data.deployment_recommendation.deployment === "Solar") {
+                badge.classList.add("bg-solarYellow", "text-textDark");
+            } else if (data.deployment_recommendation.deployment === "Wind") {
+                badge.classList.add("bg-brandPrimary");
+            } else {
+                badge.classList.add("bg-accentGreen");
+            }
+
+            document.getElementById('res-confidence').innerText = `Confidence: ${data.deployment_recommendation.confidence}%`;
+            
+            const statusLabel = document.getElementById('res-overall-status');
+            statusLabel.innerText = `Feasibility Status: ${data.overall_status}`;
+            statusLabel.className = "text-xs font-bold";
+            if (data.technical_feasibility) {
+                statusLabel.classList.add("text-accentGreen");
+            } else {
+                statusLabel.classList.add("text-dangerRed");
+            }
+
+            document.getElementById('res-financial-cost').innerText = `₹${data.estimated_project_cost.toLocaleString()}`;
+            document.getElementById('res-financial-revenue').innerText = `₹${data.annual_revenue.toLocaleString()}`;
+            
+            const paybackVal = data.payback_period;
+            document.getElementById('res-financial-payback').innerText = paybackVal < 0 ? "Infinite" : `${paybackVal} Yrs`;
+            document.getElementById('res-payback').innerText = paybackVal < 0 ? "Infinite payback timeline" : `Estimated payback: ${paybackVal} years`;
+
+            const roiVal = data.roi;
+            document.getElementById('res-financial-roi').innerText = roiVal < 0 ? "N/A" : `${roiVal}%`;
+            document.getElementById('res-roi').innerText = roiVal < 0 ? "N/A" : `ROI: ${roiVal}%`;
+
+            // 2. Suitability Scores
+            document.getElementById('res-score-overall').innerText = `${data.site_score.overall_score}/100`;
+            document.getElementById('res-score-resource').innerText = `${data.site_evaluation.resource_score}/100`;
+            document.getElementById('res-score-terrain').innerText = `${data.site_evaluation.terrain_score}/100`;
+            document.getElementById('res-score-infra').innerText = `${data.site_evaluation.infrastructure_score}/100`;
+            document.getElementById('res-score-env').innerText = `${data.site_evaluation.environmental_score}/100`;
+            document.getElementById('res-score-economic').innerText = `${data.site_evaluation.economic_score}/100`;
+
+            // 3. Technical Feasibility
+            document.getElementById('res-feasibility-score').innerText = `${data.technical_feasibility_score}/100`;
+            document.getElementById('res-feasibility-violations').innerText = data.constraint_violations;
+
+            const violationsList = document.getElementById('res-critical-violations-list');
+            violationsList.innerHTML = '';
+            if (!data.critical_violations || data.critical_violations.length === 0) {
+                violationsList.innerHTML = `<span class="text-accentGreen flex items-center gap-1"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i> No violations detected</span>`;
+            } else {
+                data.critical_violations.forEach(v => {
+                    violationsList.innerHTML += `<div class="flex items-start gap-1"><i data-lucide="x-circle" class="w-3.5 h-3.5 shrink-0 mt-0.5"></i> <span>${v}</span></div>`;
+                });
+            }
+
+            // 4. Recommendation Reason & ML Explainability
+            document.getElementById('res-reason').innerText = data.deployment_recommendation.reason;
+            document.getElementById('res-ml-explanation').innerText = data.explanation || "N/A";
+
+            const featuresList = document.getElementById('res-top-features-list');
+            featuresList.innerHTML = '';
+            if (data.top_features && data.top_features.length > 0) {
+                data.top_features.forEach(f => {
+                    featuresList.innerHTML += `
+                        <div class="p-2 bg-panelBg border border-borderClr rounded-lg text-center">
+                            <span class="text-[9px] font-bold text-textMuted uppercase block truncate">${f.feature}</span>
+                            <span class="text-xs font-bold text-textDark block mt-0.5">${(f.importance * 100).toFixed(1)}%</span>
+                        </div>
+                    `;
+                });
+            } else {
+                featuresList.innerHTML = `<span class="text-textMuted col-span-3 text-center">N/A</span>`;
+            }
+
+            // 5. Energy Yield
+            document.getElementById('res-solar-yield').innerText = `${data.solar_energy_yield_kwh.toLocaleString()}`;
+            document.getElementById('res-wind-yield').innerText = `${data.wind_energy_yield_kwh.toLocaleString()}`;
+            document.getElementById('res-hybrid-yield').innerText = `${data.hybrid_energy_yield_kwh.toLocaleString()}`;
+            document.getElementById('res-rec-yield').innerText = `${data.recommended_annual_energy_kwh.toLocaleString()}`;
+
+            // 6. Update Map view & Marker
+            if (analysisMap) {
+                analysisMap.setView([lat, lon], 10);
+                if (analysisMarker) {
+                    analysisMarker.setLatLng([lat, lon]);
+                } else {
+                    analysisMarker = L.marker([lat, lon]).addTo(analysisMap);
+                }
+                analysisMarker.bindPopup(`<b>${data.project.location}</b><br>Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}`).openPopup();
+            }
+
+            lucide.createIcons();
         }
 
         // Sidebar collapsing
@@ -968,6 +1492,17 @@
         window.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             loadData();
+
+            // Initialize Leaflet map for Analysis Screen
+            try {
+                analysisMap = L.map('analysis-map').setView([20.5937, 78.9629], 5); // Center of India
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(analysisMap);
+            } catch (mapErr) {
+                console.warn("Leaflet Map failed to load or initialize.", mapErr);
+            }
         });
     </script>
 </body>

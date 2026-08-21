@@ -24,6 +24,11 @@ class AnalysisRequest(BaseModel):
     solar_capacity_factor: float | None = Field(None, description="Optional custom solar capacity factor override (0.0 to 1.0)")
     wind_capacity_factor: float | None = Field(None, description="Optional custom wind capacity factor override (0.0 to 1.0)")
 
+    # Optional parameters for financial analysis
+    electricity_tariff_inr_per_kwh: float = Field(7.0, description="Electricity tariff in INR per kWh (default 7.0)")
+    cost_per_kw: float = Field(25000.0, description="Capital cost per kW in INR (default 25000.0)")
+    additional_installation_percentage: float = Field(10.0, description="Additional installation cost percentage (default 10.0%)")
+
 
 class ProjectInfo(BaseModel):
     project_name: str
@@ -88,3 +93,9 @@ class AnalysisResponse(BaseModel):
     wind_energy_yield_kwh: float = Field(..., description="Estimated annual wind energy generation in kWh")
     hybrid_energy_yield_kwh: float = Field(..., description="Estimated annual hybrid energy generation in kWh")
     recommended_annual_energy_kwh: float = Field(..., description="Estimated annual energy generation for the recommended technology in kWh")
+
+    # Financial Analysis
+    annual_revenue: float = Field(..., description="Estimated annual revenue in INR")
+    estimated_project_cost: float = Field(..., description="Estimated total project cost in INR")
+    payback_period: float = Field(..., description="Estimated payback period in years (returns -1.0 if undefined/infinite)")
+    roi: float = Field(..., description="Return on Investment percentage (returns -1.0 if undefined)")
