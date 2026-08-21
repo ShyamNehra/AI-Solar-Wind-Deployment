@@ -1,7 +1,15 @@
 import axios from 'axios';
 
-// Central API Base URL Configuration (Task 2)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+// Central API Base URL Configuration with Dynamic Hostname Fallback
+const getDefaultApiUrl = () => {
+  if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+    const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+    return `${protocol}//${window.location.hostname}:8000`;
+  }
+  return 'http://localhost:8000';
+};
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || getDefaultApiUrl();
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

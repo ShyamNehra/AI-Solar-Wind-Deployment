@@ -39,7 +39,8 @@ The **AI Solar & Wind Deployment Intelligence Platform** is built on a multi-tie
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ PERSISTENCE & DATA TIER (SQLAlchemy ORM)                                    │
 │ • SQLite / PostgreSQL Engine (app.db / solar_wind.db)                       │
-│ • Models: User, Project, Site, SavedSite, Prediction, EnvironmentalData     │
+│ • Models: User, Project, Site, SavedSite, RecentSite, Prediction            │
+│ • Sync: Team Workspace Cloud Synchronization across all devices             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 

@@ -34,6 +34,7 @@ from app.api.predictions import router as predictions_router
 from app.api.projects import router as projects_router
 from app.api.sites import router as sites_router
 from app.api.saved_sites import router as saved_sites_router
+from app.api.recent_sites import router as recent_sites_router
 
 
 def run_db_initialization_and_seed():
@@ -85,8 +86,8 @@ app = FastAPI(
 # 5. Configure Spec-Compliant CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    allow_origin_regex=r"^https?:\/\/.*",  # Permissive origin matching compatible with credentials
+    allow_origins=ALLOWED_ORIGINS if ALLOWED_ORIGINS else ["*"],
+    allow_origin_regex=r"^https?:\/\/.*",  # Permissive origin matching compatible with credentials & local network IPs
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -113,6 +114,7 @@ app.include_router(predictions_router, prefix="/predictions", tags=["Predictions
 app.include_router(projects_router, prefix="/projects", tags=["Projects"])
 app.include_router(sites_router, prefix="/sites", tags=["Sites"])
 app.include_router(saved_sites_router, prefix="/sites", tags=["Saved Sites"])
+app.include_router(recent_sites_router, prefix="/sites", tags=["Recent Sites"])
 app.include_router(auth_router)
 
 

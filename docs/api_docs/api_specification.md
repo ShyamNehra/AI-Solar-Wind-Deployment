@@ -3,7 +3,7 @@
 ## 1. Overview
 This document provides the technical reference specification for the **AI Solar & Wind Deployment Intelligence REST API**.
 
-- **Base URL**: `http://localhost:8000` (configurable via `VITE_API_BASE_URL`)
+- **Base URL**: `http://${window.location.hostname}:8000` (dynamically resolves hostname; overridden by `VITE_API_BASE_URL` in production)
 - **API Version**: `1.0.0`
 - **Protocol**: HTTP / HTTPS
 - **Authentication**: JWT Bearer Token (`Authorization: Bearer <token>`)
@@ -152,7 +152,42 @@ This document provides the technical reference specification for the **AI Solar 
 
 ---
 
-## 5. HTTP Error Payloads & Status Codes
+## 5. Team Recent Search History Endpoints
+
+### 5.1 Fetch Recent Workspace Evaluations
+- **Endpoint**: `GET /sites/recent?organization_id=1001`
+- **Authentication**: `Required (Bearer JWT)`
+- **Description**: Returns the 10 most recent site evaluations conducted across all team members in the specified workspace.
+
+#### Response (HTTP 200 OK)
+```json
+[
+  {
+    "id": 1,
+    "organization_id": "1001",
+    "name": "Bhadla Solar Park",
+    "latitude": 27.5397,
+    "longitude": 71.9152,
+    "status": "APPROVED",
+    "region": "Western Region",
+    "elevation": "220 Meters",
+    "existing_infra": "Substation adjacent, Road access clear",
+    "score": 94.8,
+    "project_id": "PRJ-INFOSYS-01",
+    "evaluated_by": "shyam_nehra",
+    "created_at": "2026-08-21T20:48:00Z"
+  }
+]
+```
+
+### 5.2 Record Recent Workspace Evaluation
+- **Endpoint**: `POST /sites/recent`
+- **Authentication**: `Required (Bearer JWT)`
+- **Description**: Records or updates a recent site evaluation for the team workspace.
+
+---
+
+## 6. HTTP Error Payloads & Status Codes
 
 | Code | Status | Cause | Payload Example |
 | :--- | :--- | :--- | :--- |

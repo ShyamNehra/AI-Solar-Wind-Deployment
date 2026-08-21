@@ -8,6 +8,7 @@ from app.models.wind_prediction import WindPrediction
 from app.models.suitability_score import SuitabilityScore
 from app.models.report import Report
 from app.models.saved_site import SavedSite
+from app.models.recent_site import RecentSite
 
 __all__ = [
     "User",
@@ -20,4 +21,5 @@ __all__ = [
     "SuitabilityScore",
     "Report",
     "SavedSite",
+    "RecentSite",
 ]

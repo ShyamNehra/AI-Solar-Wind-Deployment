@@ -12,6 +12,7 @@ erDiagram
     USERS ||--o{ PROJECTS : "creates"
     PROJECTS ||--o{ SITES : "contains"
     SITES ||--o{ SAVED_SITES : "persists"
+    SITES ||--o{ RECENT_SITES : "records evaluation"
     SITES ||--o{ ENVIRONMENTAL_DATA : "has"
     SITES ||--o{ PREDICTIONS : "generates"
     SITES ||--o{ SUITABILITY_SCORES : "evaluates"
@@ -61,6 +62,22 @@ erDiagram
         float longitude
         string status
         float score
+        datetime created_at
+    }
+
+    RECENT_SITES {
+        int id PK
+        string organization_id
+        string name
+        float latitude
+        float longitude
+        string status
+        string region
+        string elevation
+        string existing_infra
+        float score
+        string project_id
+        string evaluated_by
         datetime created_at
     }
 
@@ -128,6 +145,23 @@ erDiagram
 - `created_at` (TIMESTAMP, Default: UTC NOW)
 
 *Composite Index*: `idx_saved_sites_org_lat_lng` (`organization_id`, `latitude`, `longitude`) for fast workspace deduplication.
+
+### 3.3 `recent_sites` Table
+- `id` (INTEGER, Primary Key, Autoincrement)
+- `organization_id` (VARCHAR(50), Indexed, Not Null)
+- `name` (VARCHAR(200), Not Null)
+- `latitude` (FLOAT, Not Null)
+- `longitude` (FLOAT, Not Null)
+- `status` (VARCHAR(50), Default: "EVALUATED")
+- `region` (VARCHAR(100), Nullable)
+- `elevation` (VARCHAR(100), Nullable)
+- `existing_infra` (TEXT, Nullable)
+- `score` (FLOAT, Nullable)
+- `project_id` (VARCHAR(100), Nullable)
+- `evaluated_by` (VARCHAR(100), Nullable)
+- `created_at` (TIMESTAMP, Default: UTC NOW)
+
+*Workspace History Index*: `idx_recent_sites_org_created` (`organization_id`, `created_at` DESC) for sub-millisecond team evaluation history retrieval.
 
 ---
 

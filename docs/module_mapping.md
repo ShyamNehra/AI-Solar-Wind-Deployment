@@ -28,6 +28,7 @@ The **AI Solar & Wind Deployment Intelligence Platform** is structured as an end
 │ 3. Backend API Router Tier (FastAPI)                                        │
 │    • app/api/predictions.py ──► /predictions/full-analysis, /forecast       │
 │    • app/api/saved_sites.py ──► /sites/saved (GET, POST, DELETE)            │
+│    • app/api/recent_sites.py──► /sites/recent (GET, POST)                   │
 │    • app/api/projects.py    ──► /projects (Workspace Project Management)    │
 │    • app/auth/router.py     ──► /auth/login, /auth/register, /auth/me        │
 └───────────────────────────────────┬─────────────────────────────────────────┘
@@ -50,6 +51,7 @@ The **AI Solar & Wind Deployment Intelligence Platform** is structured as an end
 │    • app/models/project.py            ──► Team Projects                     │
 │    • app/models/site.py               ──► Site Records & Coordinates        │
 │    • app/models/saved_site.py         ──► Favorite Workspace Sites          │
+│    • app/models/recent_site.py        ──► Team Evaluation Search History    │
 │    • app/models/prediction.py         ──► Forecasted Inferences             │
 │    • app/models/environmental_data.py ──► NASA POWER Climate Records        │
 │    • app/models/suitability_score.py  ──► MCDA Score Breakdown             │

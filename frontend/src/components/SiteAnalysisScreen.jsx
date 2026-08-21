@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { runFullSiteAnalysis } from '../api/analysis';
-import { fetchSavedSites, saveSite, deleteSavedSite } from '../api/sites';
+import { fetchSavedSites, saveSite, deleteSavedSite, fetchRecentSites, saveRecentSite } from '../api/sites';
 import { useAuth } from '../context/AuthContext';
 import SiteMap from './SiteMap';
 import SiteCompare from './SiteCompare';
@@ -84,20 +84,38 @@ export default function SiteAnalysisScreen() {
 
   useEffect(() => {
     if (orgId) {
-      const saved = localStorage.getItem(`sw_recent_sites_${orgId}`);
-      if (saved) {
+      const fetchRecentSitesFromDb = async () => {
         try {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed)) {
-            setHistoryList(parsed.slice(0, 10));
+          const data = await fetchRecentSites(orgId);
+          if (data && Array.isArray(data) && data.length > 0) {
+            const mapped = data.map(item => ({
+              id: item.id,
+              name: item.name,
+              lat: String(item.latitude),
+              lng: String(item.longitude),
+              status: item.status || 'APPROVED',
+              projectId: item.project_id || `PRJ-${orgId.split('-')[1] || '2026'}-01`,
+              region: item.region || 'Western Region',
+              elevation: item.elevation || '220 Meters',
+              existingInfra: item.existing_infra || 'Substation adjacent',
+              evaluatedBy: item.evaluated_by
+            }));
+            setHistoryList(mapped);
+            localStorage.setItem(`sw_recent_sites_${orgId}`, JSON.stringify(mapped));
           }
-        } catch (e) { }
-      }
+        } catch (err) {
+          const cached = localStorage.getItem(`sw_recent_sites_${orgId}`);
+          if (cached) {
+            try { setHistoryList(JSON.parse(cached)); } catch (e) { }
+          }
+        }
+      };
+      fetchRecentSitesFromDb();
     }
   }, [orgId]);
 
   useEffect(() => {
-    if (orgId) {
+    if (orgId && historyList.length > 0) {
       localStorage.setItem(`sw_recent_sites_${orgId}`, JSON.stringify(historyList.slice(0, 10)));
     }
   }, [historyList, orgId]);
@@ -140,7 +158,8 @@ export default function SiteAnalysisScreen() {
       const startTime = performance.now();
       let isFastApiOk = true;
       try {
-        const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+        const hostName = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : 'localhost';
+        const apiBase = import.meta.env.VITE_API_BASE_URL || `${window.location.protocol || 'http:'}//${hostName}:8000`;
         const res = await fetch(`${apiBase}/health`, { method: 'GET' }).catch(() => fetch('/health'));
         if (res && res.ok) isFastApiOk = true;
       } catch (e) {
@@ -783,6 +802,20 @@ export default function SiteAnalysisScreen() {
         const filtered = prev.filter(item => !(item.lat === historyItem.lat && item.lng === historyItem.lng));
         return [historyItem, ...filtered].slice(0, 10);
       });
+
+      // Sync recent evaluation to team workspace database
+      saveRecentSite({
+        organization_id: orgId,
+        name: activeSiteLabel,
+        latitude: parseFloat(latitude),
+        longitude: parseFloat(longitude),
+        status: isApproved ? 'APPROVED' : 'REJECTED',
+        region: derivedRegion,
+        elevation: derivedElevation,
+        existing_infra: derivedRoad,
+        score: fullData.overall_score || 85.0,
+        project_id: projectId
+      }).catch(err => console.error("Could not sync recent site to DB:", err));
 
       // Push dynamic notification alert
       const newNotifList = [{
