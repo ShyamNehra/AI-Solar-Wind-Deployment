@@ -27,6 +27,13 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://postgres:postgres_password@postgres:5432/solar_wind_db
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
     ports:
       - "8000:8000"
     volumes:
@@ -40,6 +47,16 @@ services:
     container_name: solar-wind-frontend
     depends_on:
       - backend
+      - ./datasets:/datasets
+    environment:
+      - ENV=development
+    restart: always
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+
     ports:
       - "5173:5173"
     volumes:
@@ -51,3 +68,26 @@ services:
 
 volumes:
   postgres_data:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    restart: always
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: solar_wind_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+    volumes:
+      - ./backend/datasets:/app/datasets
+      - ./backend/models:/app/models
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
