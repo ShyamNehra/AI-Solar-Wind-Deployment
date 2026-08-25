@@ -1,0 +1,6 @@
+{
+    "panel_efficiency": 0.2,
+    "performance_ratio": 0.75,
+    "reference_system_size_kwp": 1.0,
+    "panel_area_per_kwp_sqm": 5.0
+}

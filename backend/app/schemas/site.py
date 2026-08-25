@@ -1,32 +1,39 @@
-from datetime import datetime
 from pydantic import BaseModel
+from datetime import datetime
+from typing import Optional, List
 
-
-class SiteCreate(BaseModel):
-    project_id: str
+class SiteBase(BaseModel):
     name: str
     latitude: float
     longitude: float
-    region: str | None = None
-    land_area_sqkm: float | None = None
-    elevation_m: float | None = None
-    land_ownership: str | None = None
+    land_area: Optional[float] = None
+    elevation: Optional[float] = None
+    existing_infrastructure: Optional[str] = None
+    land_ownership: Optional[str] = None
 
+class SiteCreate(SiteBase):
+    pass
 
-class SiteResponse(BaseModel):
-    id: str
-    project_id: str
+class SiteOut(BaseModel):
+    id: int
+    project_id: int
     name: str
     latitude: float
     longitude: float
-    region: str | None = None
-    land_area_sqkm: float | None = None
-    elevation_m: float | None = None
-    land_ownership: str | None = None
+    land_area: Optional[float] = None
+    elevation: Optional[float] = None
+    existing_infrastructure: Optional[str] = None
+    land_ownership: Optional[str] = None
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+class SiteCompareOut(BaseModel):
+    site1: SiteOut
+    site2: SiteOut
+    elevation_difference: float
+    distance_km: float
 from pydantic import BaseModel, Field
 from typing import Optional
 

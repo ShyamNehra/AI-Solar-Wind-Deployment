@@ -1,163 +1,273 @@
-# Database Design
+# Database Design Draft
 
-## Overview
-
-The database stores user information, renewable energy projects, environmental data, prediction results, and generated reports. It is designed to support solar and wind energy site suitability analysis.
+## Project
+AI-Powered Solar & Wind Deployment Intelligence Platform
 
 ---
 
 # 1. Users
 
-**Primary Key:** `user_id`
+### Primary Key
+- user_id
 
-| Column | Data Type | Description |
-|---------|-----------|-------------|
-| user_id | INT | Unique user ID |
-| name | VARCHAR(100) | Full name |
-| email | VARCHAR(100) | Email address |
-| password_hash | VARCHAR(255) | Encrypted password |
-| role | VARCHAR(20) | Admin/User |
-| created_at | TIMESTAMP | Registration date |
+### Important Columns
+- user_id
+- full_name
+- email
+- password_hash
+- role
+- created_at
 
 ---
 
 # 2. Projects
 
-**Primary Key:** `project_id`
+### Primary Key
+- project_id
 
-| Column | Data Type | Description |
-|---------|-----------|-------------|
-| project_id | INT | Unique project ID |
-| user_id | INT | Owner of project |
-| project_name | VARCHAR(150) | Project title |
-| description | TEXT | Project description |
-| created_at | TIMESTAMP | Creation time |
-
-**Foreign Key**
-- user_id → Users.user_id
+### Important Columns
+- project_id
+- project_name
+- description
+- created_by
+- created_at
+- status
 
 ---
 
 # 3. Sites
 
-**Primary Key:** `site_id`
+### Primary Key
+- site_id
 
-| Column | Data Type | Description |
-|---------|-----------|-------------|
-| site_id | INT | Unique site ID |
-| project_id | INT | Associated project |
-| location_name | VARCHAR(100) | Site name |
-| latitude | DECIMAL(10,6) | Latitude |
-| longitude | DECIMAL(10,6) | Longitude |
-| state | VARCHAR(100) | State |
-| country | VARCHAR(100) | Country |
-
-**Foreign Key**
-- project_id → Projects.project_id
+### Important Columns
+- site_id
+- project_id
+- site_name
+- latitude
+- longitude
+- district
+- state
+- elevation
 
 ---
 
 # 4. EnvironmentalData
 
-**Primary Key:** `environment_id`
+### Primary Key
+- environmental_data_id
 
-| Column | Data Type | Description |
-|---------|-----------|-------------|
-| environment_id | INT | Unique record ID |
-| site_id | INT | Site reference |
-| temperature | FLOAT | Average temperature |
-| rainfall | FLOAT | Rainfall |
-| wind_speed | FLOAT | Wind speed |
-| solar_radiation | FLOAT | Solar radiation |
-| humidity | FLOAT | Humidity |
-| year | INT | Observation year |
-
-**Foreign Key**
-- site_id → Sites.site_id
+### Important Columns
+- environmental_data_id
+- site_id
+- solar_irradiance
+- wind_speed
+- temperature
+- rainfall
+- slope
+- land_cover
+- data_source
+- collected_at
 
 ---
 
 # 5. SolarPrediction
 
-**Primary Key:** `solar_prediction_id`
+### Primary Key
+- solar_prediction_id
 
-| Column | Data Type | Description |
-|---------|-----------|-------------|
-| solar_prediction_id | INT | Prediction ID |
-| site_id | INT | Site reference |
-| predicted_output | FLOAT | Expected solar output |
-| efficiency | FLOAT | Efficiency percentage |
-| prediction_date | DATE | Prediction date |
-
-**Foreign Key**
-- site_id → Sites.site_id
+### Important Columns
+- solar_prediction_id
+- site_id
+- predicted_generation
+- efficiency_score
+- confidence_score
+- prediction_date
 
 ---
 
 # 6. WindPrediction
 
-**Primary Key:** `wind_prediction_id`
+### Primary Key
+- wind_prediction_id
 
-| Column | Data Type | Description |
-|---------|-----------|-------------|
-| wind_prediction_id | INT | Prediction ID |
-| site_id | INT | Site reference |
-| predicted_output | FLOAT | Expected wind output |
-| average_speed | FLOAT | Average wind speed |
-| prediction_date | DATE | Prediction date |
-
-**Foreign Key**
-- site_id → Sites.site_id
+### Important Columns
+- wind_prediction_id
+- site_id
+- predicted_generation
+- average_wind_speed
+- confidence_score
+- prediction_date
 
 ---
 
 # 7. SuitabilityScore
 
-**Primary Key:** `score_id`
+### Primary Key
+- suitability_score_id
 
-| Column | Data Type | Description |
-|---------|-----------|-------------|
-| score_id | INT | Score ID |
-| site_id | INT | Site reference |
-| solar_score | FLOAT | Solar suitability |
-| wind_score | FLOAT | Wind suitability |
-| overall_score | FLOAT | Combined score |
-| recommendation | VARCHAR(100) | Best renewable source |
-
-**Foreign Key**
-- site_id → Sites.site_id
+### Important Columns
+- suitability_score_id
+- site_id
+- solar_score
+- wind_score
+- terrain_score
+- accessibility_score
+- overall_score
+- recommendation
 
 ---
 
 # 8. Reports
 
-**Primary Key:** `report_id`
+### Primary Key
+- report_id
 
-| Column | Data Type | Description |
-|---------|-----------|-------------|
-| report_id | INT | Report ID |
-| project_id | INT | Related project |
-| report_name | VARCHAR(150) | Report title |
-| generated_date | TIMESTAMP | Date generated |
-| report_path | VARCHAR(255) | PDF/File location |
-
-**Foreign Key**
-- project_id → Projects.project_id
+### Important Columns
+- report_id
+- project_id
+- report_name
+- generated_by
+- generated_at
+- report_type
+- report_path
 
 ---
 
-# Entity Relationships
+# Summary
 
-Users (1) ---- (M) Projects
+| Table | Primary Key |
+|--------|-------------|
+| Users | user_id |
+| Projects | project_id |
+| Sites | site_id |
+| EnvironmentalData | environmental_data_id |
+| SolarPrediction | solar_prediction_id |
+| WindPrediction | wind_prediction_id |
+| SuitabilityScore | suitability_score_id |
+| Reports | report_id |
+This document outlines the relational database design for the Solar & Wind Deployment Intelligence Platform. 
 
-Projects (1) ---- (M) Sites
+```mermaid
+erDiagram
+    USERS ||--o{ PROJECTS : owns
+    PROJECTS ||--o{ SITES : contains
+    SITES ||--|| ENVIRONMENTAL_DATA : measures
+    SITES ||--|| SUITABILITY_SCORES : calculates
+    SITES ||--o{ SOLAR_PREDICTIONS : predicts
+    SITES ||--o{ WIND_PREDICTIONS : predicts
+    PROJECTS ||--o{ REPORTS : compiles
+```
 
-Sites (1) ---- (M) EnvironmentalData
+---
 
-Sites (1) ---- (1) SolarPrediction
+## 1. `Users` Table
+Stores login credentials and access levels for secure operations.
+* **Primary Key**: `user_id` (UUID)
+* **Columns**:
+  - `user_id` (UUID, Primary Key)
+  - `email` (VARCHAR, Unique, Indexed)
+  - `hashed_password` (VARCHAR)
+  - `full_name` (VARCHAR)
+  - `role` (VARCHAR)
+  - `created_at` (TIMESTAMP)
 
-Sites (1) ---- (1) WindPrediction
+---
 
-Sites (1) ---- (1) SuitabilityScore
+## 2. `Projects` Table
+Represents configuration settings and parameters for a deployment assessment.
+* **Primary Key**: `project_id` (UUID)
+* **Foreign Key**: `user_id` references `Users(user_id)`
+* **Columns**:
+  - `project_id` (UUID, Primary Key)
+  - `user_id` (UUID, Foreign Key)
+  - `name` (VARCHAR)
+  - `description` (TEXT)
+  - `created_at` (TIMESTAMP)
 
-Projects (1) ---- (M) Reports
+---
+
+## 3. `Sites` Table
+Stores geographical candidates evaluated for solar-wind installation suitability.
+* **Primary Key**: `site_id` (UUID)
+* **Foreign Key**: `project_id` references `Projects(project_id)`
+* **Columns**:
+  - `site_id` (UUID, Primary Key)
+  - `project_id` (UUID, Foreign Key)
+  - `name` (VARCHAR)
+  - `latitude` (DECIMAL(9,6))
+  - `longitude` (DECIMAL(9,6))
+  - `area_sq_m` (DECIMAL)
+  - `created_at` (TIMESTAMP)
+
+---
+
+## 4. `EnvironmentalData` Table
+Caches geological constraints and elevation mappings from SRTM/Sentinel/OSM.
+* **Primary Key**: `env_data_id` (UUID)
+* **Foreign Key**: `site_id` references `Sites(site_id)`
+* **Columns**:
+  - `env_data_id` (UUID, Primary Key)
+  - `site_id` (UUID, Foreign Key)
+  - `elevation_m` (DECIMAL)
+  - `slope_degrees` (DECIMAL)
+  - `land_cover_class` (VARCHAR)
+  - `dist_to_road_m` (DECIMAL)
+  - `dist_to_substation_m` (DECIMAL)
+  - `updated_at` (TIMESTAMP)
+
+---
+
+## 5. `SolarPrediction` Table
+Caches day-by-day solar predictions derived from NASA POWER datasets.
+* **Primary Key**: `solar_pred_id` (UUID)
+* **Foreign Key**: `site_id` references `Sites(site_id)`
+* **Columns**:
+  - `solar_pred_id` (UUID, Primary Key)
+  - `site_id` (UUID, Foreign Key)
+  - `prediction_date` (DATE)
+  - `expected_ghi` (DECIMAL)  -- Global Horizontal Irradiance
+  - `predicted_solar_yield_kwh` (DECIMAL)
+  - `confidence_score` (DECIMAL)
+
+---
+
+## 6. `WindPrediction` Table
+Caches wind speed predictions and energy generation yield forecasts.
+* **Primary Key**: `wind_pred_id` (UUID)
+* **Foreign Key**: `site_id` references `Sites(site_id)`
+* **Columns**:
+  - `wind_pred_id` (UUID, Primary Key)
+  - `site_id` (UUID, Foreign Key)
+  - `prediction_date` (DATE)
+  - `average_wind_speed_ms` (DECIMAL)
+  - `predicted_wind_yield_kwh` (DECIMAL)
+  - `confidence_score` (DECIMAL)
+
+---
+
+## 7. `SuitabilityScore` Table
+Holds multi-criteria optimization indices calculated for wind and solar suitability.
+* **Primary Key**: `score_id` (UUID)
+* **Foreign Key**: `site_id` references `Sites(site_id)`
+* **Columns**:
+  - `score_id` (UUID, Primary Key)
+  - `site_id` (UUID, Foreign Key)
+  - `solar_score` (DECIMAL(5,2))      -- Out of 100
+  - `wind_score` (DECIMAL(5,2))       -- Out of 100
+  - `infrastructure_score` (DECIMAL(5,2)) -- Out of 100
+  - `overall_suitability_score` (DECIMAL(5,2))
+  - `evaluated_at` (TIMESTAMP)
+
+---
+
+## 8. `Reports` Table
+Compiles final analysis PDFs/Excel metadata generated for export.
+* **Primary Key**: `report_id` (UUID)
+* **Foreign Key**: `project_id` references `Projects(project_id)`
+* **Columns**:
+  - `report_id` (UUID, Primary Key)
+  - `project_id` (UUID, Foreign Key)
+  - `report_type` (VARCHAR)  -- e.g. "PDF", "XLSX"
+  - `file_path` (VARCHAR)
+  - `generated_at` (TIMESTAMP)

@@ -1,29 +1,20 @@
-import enum
-import uuid
-from sqlalchemy import Column, String, Boolean, Enum, DateTime, func
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Table
 from sqlalchemy.orm import relationship
-from app.database.database import Base
+from app.db.postgres import Base
 
+# Association table for User <-> Role many-to-many relationship
+user_roles = Table(
+    "user_roles",
+    Base.metadata,
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("role_id", Integer, ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True)
+)
 
-class UserRole(str, enum.Enum):
-    PLANNER = "Renewable Energy Planner"
-    GIS_ANALYST = "GIS Analyst"
-    PROJECT_MANAGER = "Project Manager"
-    ADMIN = "Administrator"
+class Role(Base):
+    __tablename__ = "roles"
 
-
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
-    full_name = Column(String, nullable=True)
-    role = Column(Enum(UserRole), default=UserRole.PLANNER, nullable=False)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    projects = relationship("Project", back_populates="owner", cascade="all, delete-orphan")
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(50), unique=True, nullable=False, index=True)
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -34,6 +25,14 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    hashed_password = Column(String(255), nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+
+    roles = relationship("Role", secondary=user_roles, backref="users")
+    notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
+
+from app.models.notification import Notification
     username = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     role = Column(String, nullable=False, default="Renewable Energy Planner")

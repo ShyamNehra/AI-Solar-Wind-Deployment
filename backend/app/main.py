@@ -1,50 +1,161 @@
-from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy.orm import Session
-from sqlalchemy import text
-from dotenv import load_dotenv  # <--- ADD THIS
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.api.auth import router as auth_router
+from app.api.projects import router as projects_router
+from app.api.sites import router as sites_router
+from app.api.environmental import router as environmental_router
+from app.api.predictions import router as predictions_router
+from app.api.suitability import router as suitability_router
+from app.api.scoring import router as scoring_router
+from app.api.forecasting import router as forecasting_router
+from app.api.optimization import router as optimization_router
+from app.api.admin import router as admin_router
+from app.api.dashboards import router as dashboards_router
+from app.api.notifications import router as notifications_router
+from app.api.reports import router as reports_router
+from app.db.mongo import init_mongo
+from contextlib import asynccontextmanager
 
-load_dotenv()  # <--- ADD THIS (Loads .env into os.environ)
-
-from app.database.database import engine, Base, get_db
-from app.utils.config import settings
-from app.api import auth, projects, sites, environmental, analytics
-
-import app.models  # noqa: F401
-
-Base.metadata.create_all(bind=engine)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Setup Mongo indexes on startup
+    init_mongo()
+    yield
 
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version=settings.VERSION
+    title="Solar & Wind Deployment Intelligence Platform API",
+    version="1.0.0",
+    lifespan=lifespan
 )
 
-# Include Routers
-app.include_router(auth.router, prefix=settings.API_V1_STR)
-app.include_router(projects.router, prefix=settings.API_V1_STR)
-app.include_router(sites.router, prefix=settings.API_V1_STR)
-app.include_router(environmental.router, prefix=settings.API_V1_STR)
-app.include_router(analytics.router, prefix=settings.API_V1_STR)
+# CORS Middleware setup
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+
+from app.database.database import (
+    engine,
+    Base,
+)
+
+from app.models.project import Project
+from app.models.feature import Feature
+
+from app.api.home import (
+    router as home_router,
+)
+
+from app.api.projects import (
+    router as projects_router,
+)
+
+from app.api.sites import (
+    router as sites_router,
+)
+
+from app.api.predictions import (
+    router as predictions_router,
+)
+
+from app.api.feature import (
+    router as feature_router,
+)
+
+from app.api.evaluation import (
+    router as evaluation_router,
+)
+
+from app.api.solar import (
+    router as solar_router,
+)
+
+from app.api.analysis import (
+    router as analysis_router,
+)
 
 
-@app.get("/")
-def read_root():
-    return {"message": f"Welcome to {settings.PROJECT_NAME} API"}
+app = FastAPI(
+    title=(
+        "AI-Powered Solar & Wind "
+        "Deployment Intelligence Platform"
+    )
+)
+
+
+app.add_middleware(
+    CORSMiddleware,
+
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+
+    allow_credentials=True,
+
+    allow_methods=["*"],
+
+    allow_headers=["*"],
+)
+
+
+app.include_router(
+    home_router
+)
+
+app.include_router(
+    projects_router
+)
+
+app.include_router(
+    sites_router
+)
+
+app.include_router(
+    predictions_router
+)
+
+app.include_router(
+    feature_router
+)
+
+app.include_router(
+    evaluation_router
+)
+
+app.include_router(
+    solar_router
+)
+
+app.include_router(
+    analysis_router
+)
+
+
+Base.metadata.create_all(
+    bind=engine
+)
 
 
 @app.get("/health")
-def health_check(db: Session = Depends(get_db)):
-    try:
-        result = db.execute(text("SELECT current_database();")).fetchone()
-        return {
-            "status": "Running",
-            "database_status": "Connected",
-            "active_database": result[0] if result else None
-        }
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Database connection failed: {str(e)}"
-        )
+def health():
+
+    return {
+        "status": "healthy",
+        "service":
+            "renewable-energy-analysis",
+    }
+from app.api.analysis import router as analysis_router
+
+app = FastAPI(
+    title="Solar & Wind Deployment Intelligence Platform API",
+    description="Backend API for hybrid wind-solar site intelligence assessments.",
+    version="1.0.0"
+)
+
+# CORS configurations
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permits requests from localhost:5173 / frontend ports
 """
 Solar & Wind Deployment Intelligence Platform - FastAPI Main Application
 """
@@ -117,6 +228,38 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Register routers
+app.include_router(auth_router, prefix="/api")
+app.include_router(projects_router, prefix="/api")
+app.include_router(sites_router, prefix="/api")
+app.include_router(environmental_router, prefix="/api")
+app.include_router(predictions_router, prefix="/api")
+app.include_router(suitability_router, prefix="/api")
+app.include_router(scoring_router, prefix="/api")
+app.include_router(forecasting_router, prefix="/api")
+app.include_router(optimization_router, prefix="/api")
+app.include_router(admin_router, prefix="/api")
+app.include_router(dashboards_router, prefix="/api")
+app.include_router(notifications_router, prefix="/api")
+app.include_router(reports_router, prefix="/api")
+
+@app.get("/health")
+def health():
+    return {"status": "healthy"}
+# Include API routers
+app.include_router(analysis_router)
+
+@app.get("/")
+def home():
+    return {"message": "Solar Wind Deployment Intelligence API"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "Running"}
+
+@app.get("/about")
+def about_project():
+    return {"project": "Solar & Wind Deployment Intelligence Platform"}
 Base.metadata.create_all(bind=engine)
 
 app.include_router(home_router)

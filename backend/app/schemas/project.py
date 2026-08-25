@@ -1,22 +1,19 @@
-from datetime import datetime
 from pydantic import BaseModel
+from datetime import datetime
+from typing import Optional
 
+class ProjectBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+from pydantic import BaseModel, Field
 
 class ProjectCreate(BaseModel):
-    name: str
-    description: str | None = None
+    project_name: str = Field(..., min_length=1)
+    description: str
+    state: str
 
-
-class ProjectResponse(BaseModel):
-    id: str
-    name: str
-    description: str | None = None
-    owner_id: str
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-from pydantic import BaseModel, Field
+    latitude: float = Field(..., ge=-90, le=90)
+    longitude: float = Field(..., ge=-180, le=180)
 from datetime import datetime
 from typing import Optional, List
 
@@ -31,6 +28,10 @@ class ProjectBase(BaseModel):
 class ProjectCreate(ProjectBase):
     pass
 
+class ProjectOut(ProjectBase):
+    id: int
+    created_at: datetime
+    owner_id: int
 
 class ProjectUpdate(BaseModel):
     project_name: Optional[str] = None

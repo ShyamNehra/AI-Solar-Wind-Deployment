@@ -1,3 +1,90 @@
+.env
+.env*.local
+docker_err.log
+docker_out.log
+node_modules/
+.next/
+__pycache__/
+*.pyc
+.pytest_cache/
+venv/
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Node/React dependencies
+node_modules/
+dist/
+build/
+.eslintcache
+
+# Datasets & local large files
+datasets/*
+!datasets/.gitkeep
+
+# IDEs & System files
+.DS_Store
+.vscode/
+.idea/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Pytest
+.pytest_cache/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+build.log
+
+# Node
+node_modules/
+dist/
+# Python cache and bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment variables
+.env
+
+# IDE and Editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+Thumbs.db
 # Python
 __pycache__/
 *.py[cod]
@@ -26,6 +113,9 @@ build/
 .DS_Store
 Thumbs.db
 
+# IDE
+.vscode/
+.idea/
 # Logs
 *.log
 # Frontend

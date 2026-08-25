@@ -1,17 +1,25 @@
-from datetime import datetime
 from pydantic import BaseModel
+from typing import Dict, Any
 
-
-class SuitabilityScoreResponse(BaseModel):
-    id: str
-    site_id: str
-    overall_score: float
-    solar_score: float
-    wind_score: float
+class SuitabilityScoreBreakdown(BaseModel):
+    resource_score: float
+    geographic_score: float
     infrastructure_score: float
-    recommendation: str
-    risks: list[str]
-    created_at: datetime
+    environmental_score: float
+    economic_score: float
+    overall_deployment_score: float
+    suitability_category: str
+    capacity_factor: float
 
-    class Config:
-        from_attributes = True
+class SuitabilityDisclosures(BaseModel):
+    formula_used: str
+    formula_source: str
+    economic_score_note: str
+    environmental_score_note: str
+    infrastructure_score_note: str
+
+class SuitabilityOut(BaseModel):
+    site_id: int
+    solar: SuitabilityScoreBreakdown
+    wind: SuitabilityScoreBreakdown
+    disclosures: SuitabilityDisclosures
