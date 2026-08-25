@@ -11,3 +11,14 @@ build/
 ml_artifacts/
 scratch/
 tests/
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.git/
+.gitignore
+.vscode/
+.pytest_cache/
+.coverage
+*.log

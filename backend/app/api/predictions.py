@@ -146,3 +146,6 @@ def run_wind_prediction(
         model_note=WIND_MODEL_NOTE,
         created_at=prediction.created_at
     )
+from fastapi import APIRouter
+
+router = APIRouter()
