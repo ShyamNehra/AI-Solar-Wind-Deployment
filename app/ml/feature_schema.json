@@ -1,0 +1,14 @@
+[
+  "solar_irradiance",
+  "wind_speed",
+  "temperature",
+  "humidity",
+  "elevation",
+  "slope",
+  "distance_to_road",
+  "distance_to_grid",
+  "protected_area_distance",
+  "environmental_impact_level",
+  "land_cost_per_acre",
+  "grid_connection_cost"
+]

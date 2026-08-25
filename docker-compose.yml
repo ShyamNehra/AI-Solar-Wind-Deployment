@@ -29,3 +29,22 @@ services:
     depends_on:
       - backend
     restart: always
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: solar_wind_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+    volumes:
+      - ./backend/datasets:/app/datasets
+      - ./backend/models:/app/models
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
