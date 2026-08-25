@@ -1,3 +1,9 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -33,6 +39,21 @@ venv/
 .venv/
 env/
 
+# Pytest
+.pytest_cache/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+build.log
+
+# Node
+node_modules/
+dist/
 # Python cache and bytecode
 __pycache__/
 *.pyc
@@ -82,6 +103,9 @@ build/
 .DS_Store
 Thumbs.db
 
+# IDE
+.vscode/
+.idea/
 # Logs
 *.log
 # Frontend
