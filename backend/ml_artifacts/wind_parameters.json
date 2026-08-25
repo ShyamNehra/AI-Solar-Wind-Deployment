@@ -1,0 +1,8 @@
+{
+    "air_density_kg_cum": 1.225,
+    "reference_turbine_kw": 2000.0,
+    "baseline_turbulence_intensity": 0.12,
+    "cut_in_speed_mps": 3.0,
+    "cut_out_speed_mps": 25.0,
+    "power_curve_discount_factor": 0.45
+}

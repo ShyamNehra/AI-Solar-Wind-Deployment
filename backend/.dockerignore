@@ -1,3 +1,16 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.git/
+*.egg-info/
+dist/
+build/
+.env
+ml_artifacts/
+scratch/
+tests/
 .env
 __pycache__/
 *.pyc

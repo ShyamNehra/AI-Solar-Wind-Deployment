@@ -1,3 +1,13 @@
+.env
+.env*.local
+docker_err.log
+docker_out.log
+node_modules/
+.next/
+__pycache__/
+*.pyc
+.pytest_cache/
+venv/
 # Python
 __pycache__/
 *.py[cod]

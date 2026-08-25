@@ -1,4 +1,29 @@
 {
+  "name": "solar-wind-intelligence-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for Solar & Wind Deployment Intelligence Platform",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "next": "16.2.11",
+    "tailwindcss": "4.3.3",
+    "leaflet": "1.9.4",
+    "react-leaflet": "5.0.0",
+    "mapbox-gl": "3.26.0",
+    "chart.js": "4.5.1",
+    "react-chartjs-2": "5.3.1",
+    "axios": "1.18.1"
+  },
+  "devDependencies": {
+    "typescript": "5.4.5",
+    "@types/react": "19.0.8",
+    "@types/react-dom": "19.0.3",
+    "@types/node": "20.11.0"
   "name": "solar-wind-frontend",
   "private": true,
   "version": "0.0.1",

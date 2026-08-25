@@ -1,0 +1,39 @@
+solar-wind-intelligence/
+├── backend/
+│   ├── __init__.py
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── api/
+│   │   │   └── __init__.py
+│   │   ├── core/
+│   │   │   └── __init__.py
+│   │   ├── gis/
+│   │   │   └── __init__.py
+│   │   ├── ml/
+│   │   │   └── __init__.py
+│   │   ├── models/
+│   │   │   └── __init__.py
+│   │   └── services/
+│   │       └── __init__.py
+│   └── requirements.txt
+├── docker/
+│   └── .gitkeep
+├── docs/
+│   ├── .gitkeep
+│   ├── 00_open_questions.md
+│   └── 00_spec_extraction.md
+├── frontend/
+│   ├── package.json
+│   └── src/
+│       ├── components/
+│       │   └── .gitkeep
+│       ├── hooks/
+│       │   └── .gitkeep
+│       ├── pages/
+│       │   └── .gitkeep
+│       └── services/
+│           └── .gitkeep
+├── tests/
+│   └── .gitkeep
+├── repo_structure_proposal.txt
+└── requirements.txt

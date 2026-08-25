@@ -1,3 +1,10 @@
+from pydantic import BaseModel
+from datetime import datetime
+from typing import Optional
+
+class ProjectBase(BaseModel):
+    name: str
+    description: Optional[str] = None
 from pydantic import BaseModel, Field
 
 class ProjectCreate(BaseModel):
@@ -21,6 +28,10 @@ class ProjectBase(BaseModel):
 class ProjectCreate(ProjectBase):
     pass
 
+class ProjectOut(ProjectBase):
+    id: int
+    created_at: datetime
+    owner_id: int
 
 class ProjectUpdate(BaseModel):
     project_name: Optional[str] = None
