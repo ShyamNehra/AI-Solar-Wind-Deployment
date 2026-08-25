@@ -1,3 +1,33 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Node/React dependencies
+node_modules/
+dist/
+build/
+.eslintcache
+
+# Datasets & local large files
+datasets/*
+!datasets/.gitkeep
+
+# IDEs & System files
+.DS_Store
+.vscode/
+.idea/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
 # Virtual environment
 venv/
 .venv/
